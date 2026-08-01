@@ -5,6 +5,11 @@ function App() {
   // 1. Theme State
   const [theme, setTheme] = useState('slate');
 
+  // Modal State
+  const [showModal, setShowModal] = useState(false);
+  const [modalAmount, setModalAmount] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+
   // 2. Savings Goal State
   const [savingsGoal, setSavingsGoal] = useState({
     target: 20000000, // Rp 20.000.000
@@ -61,10 +66,14 @@ function App() {
   }, [savingsPercent]);
 
   // 7. Interactive Savings Goal actions
-  const handleAddSavings = () => {
-    const amountStr = prompt("Masukkan jumlah dana untuk dimasukkan ke target tabungan:");
-    if (!amountStr) return;
-    const amount = parseInt(amountStr, 10);
+  const handleAddSavingsClick = () => {
+    setShowModal(true);
+    setModalAmount('');
+  };
+
+  const submitSavings = (e) => {
+    e.preventDefault();
+    const amount = parseInt(modalAmount, 10);
     if (isNaN(amount) || amount <= 0) {
       alert("Masukkan jumlah angka yang valid!");
       return;
@@ -77,6 +86,11 @@ function App() {
       ...prev,
       current: Math.min(prev.current + amount, prev.target)
     }));
+    setShowSuccess(true);
+    setTimeout(() => {
+      setShowSuccess(false);
+      setShowModal(false);
+    }, 1500);
   };
 
   // 8. Transaction CRUD actions
@@ -168,7 +182,8 @@ function App() {
             '#c084fc',
             accentSecondary
           ],
-          borderWidth: 1.5
+          borderWidth: 2,
+          hoverOffset: 8
         }]
       },
       options: {
@@ -179,15 +194,32 @@ function App() {
             position: 'right',
             labels: {
               color: textMuted,
+              usePointStyle: true,
+              padding: 20,
               font: {
                 family: 'Plus Jakarta Sans',
                 weight: '600',
-                size: 11
+                size: 12
               }
             }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+            titleFont: { family: 'Space Grotesk', size: 14, weight: '700' },
+            bodyFont: { family: 'Plus Jakarta Sans', size: 13 },
+            padding: 12,
+            borderColor: accentGlow,
+            borderWidth: 1,
+            displayColors: true,
+            boxPadding: 6,
+            cornerRadius: 12
           }
         },
-        cutout: '70%'
+        cutout: '75%',
+        animation: {
+          animateScale: true,
+          animateRotate: true
+        }
       }
     });
 
@@ -205,6 +237,17 @@ function App() {
       currency: 'IDR',
       maximumFractionDigits: 0
     }).format(val);
+  };
+
+  const getCategoryColorClass = (category) => {
+    const colors = {
+      'Gaji': 'pill-income',
+      'Belanja': 'pill-expense-1',
+      'Makanan': 'pill-expense-2',
+      'Hiburan': 'pill-expense-3',
+      'Lainnya': 'pill-expense-4'
+    };
+    return colors[category] || 'pill-expense-4';
   };
 
   const getCategoryIcon = (category) => {
@@ -294,14 +337,13 @@ function App() {
           {/* Card 2: Savings Goal (SVG progress ring) */}
           <div className="glass-card savings-goal-card">
             <div className="goal-header">
-              <span style={{ fontWeight: 600 }}><i className="bi bi-piggy-bank me-2"></i>Savings Goal</span>
+              <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center' }}><i className="bi bi-piggy-bank me-2"></i>Savings Goal</span>
               <button 
-                onClick={handleAddSavings} 
-                className="btn-delete" 
-                style={{ padding: '2px 8px', fontSize: '0.8rem', background: 'rgba(255,255,255,0.04)', borderRadius: '6px' }}
+                onClick={handleAddSavingsClick} 
+                className="btn-tabung-premium" 
                 title="Tambahkan dana ke tabungan"
               >
-                + Tabung
+                <i className="bi bi-plus-lg"></i> Tabung
               </button>
             </div>
             
@@ -422,7 +464,11 @@ function App() {
                     </div>
                     <div>
                       <div className="t-name">{t.name}</div>
-                      <div className="t-category">{t.category}</div>
+                      <div className="t-category">
+                        <span className={`category-pill ${getCategoryColorClass(t.category)}`}>
+                          <span className="pill-dot"></span> {t.category}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div className="t-right">
@@ -449,6 +495,49 @@ function App() {
           </div>
 
         </div>
+
+        {/* Custom Premium Modal for Savings */}
+        {showModal && (
+          <div className="modal-overlay">
+            <div className={`modal-content ${showSuccess ? 'success-state' : ''}`}>
+              {!showSuccess ? (
+                <>
+                  <div className="modal-header">
+                    <h3><i className="bi bi-piggy-bank"></i> Tambah Tabungan</h3>
+                    <button className="btn-close-modal" onClick={() => setShowModal(false)}>
+                      <i className="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                  <form onSubmit={submitSavings} className="modal-body">
+                    <p className="modal-desc">Alokasikan sisa saldo Anda ke target tabungan untuk masa depan.</p>
+                    <div className="form-group">
+                      <label>Jumlah Dana (Rp)</label>
+                      <input 
+                        type="number" 
+                        className="form-input modal-input" 
+                        placeholder="Contoh: 500000" 
+                        value={modalAmount}
+                        onChange={(e) => setModalAmount(e.target.value)}
+                        autoFocus
+                        required
+                      />
+                    </div>
+                    <div className="modal-actions">
+                      <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Batal</button>
+                      <button type="submit" className="btn-submit modal-submit">Simpan</button>
+                    </div>
+                  </form>
+                </>
+              ) : (
+                <div className="success-animation">
+                  <div className="success-icon"><i className="bi bi-check-lg"></i></div>
+                  <h3>Berhasil!</h3>
+                  <p>Dana tabungan berhasil ditambahkan.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <footer style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
           &copy; 2026 Financely. Built with React + Vite + Chart.js.
