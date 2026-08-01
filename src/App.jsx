@@ -5,6 +5,11 @@ function App() {
   // 1. Theme State
   const [theme, setTheme] = useState('slate');
 
+  // Sync theme class to document.body
+  useEffect(() => {
+    document.body.className = `theme-${theme}`;
+  }, [theme]);
+
   // Modal State
   const [showModal, setShowModal] = useState(false);
   const [modalAmount, setModalAmount] = useState('');
