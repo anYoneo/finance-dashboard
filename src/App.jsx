@@ -14,7 +14,6 @@ function App() {
   const [showModal, setShowModal] = useState(false);
   const [modalAmount, setModalAmount] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
-
   // Layout State
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -22,20 +21,44 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
 
-  // 2. Savings Goal State
-  const [savingsGoal, setSavingsGoal] = useState({
-    target: 20000000,
-    current: 7500000
+
+
+  // 2. Savings Goal State (Persistent)
+  const [savingsGoal, setSavingsGoal] = useState(() => {
+    try {
+      const saved = localStorage.getItem('financely_savings');
+      return saved ? JSON.parse(saved) : { target: 20000000, current: 7500000 };
+    } catch (e) {
+      console.error(e);
+      return { target: 20000000, current: 7500000 };
+    }
   });
 
-  // 3. Transactions State
-  const [transactions, setTransactions] = useState([
-    { id: 1, name: 'Gaji Bulanan', amount: 18500000, type: 'income', category: 'Gaji', date: '2026-08-01' },
-    { id: 2, name: 'Belanja Bulanan', amount: 1200000, type: 'expense', category: 'Belanja', date: '2026-08-02' },
-    { id: 3, name: 'Makan Malam Restaurant', amount: 450000, type: 'expense', category: 'Makanan', date: '2026-08-03' },
-    { id: 4, name: 'Langganan Netflix', amount: 186000, type: 'expense', category: 'Hiburan', date: '2026-08-04' },
-    { id: 5, name: 'Freelance Project', amount: 3500000, type: 'income', category: 'Gaji', date: '2026-08-05' }
-  ]);
+  // 3. Transactions State (Persistent)
+  const [transactions, setTransactions] = useState(() => {
+    try {
+      const saved = localStorage.getItem('financely_transactions');
+      return saved ? JSON.parse(saved) : [
+        { id: 1, name: 'Gaji Bulanan', amount: 18500000, type: 'income', category: 'Gaji', date: '2026-08-01' },
+        { id: 2, name: 'Belanja Bulanan', amount: 1200000, type: 'expense', category: 'Belanja', date: '2026-08-02' },
+        { id: 3, name: 'Makan Malam Restaurant', amount: 450000, type: 'expense', category: 'Makanan', date: '2026-08-03' },
+        { id: 4, name: 'Langganan Netflix', amount: 186000, type: 'expense', category: 'Hiburan', date: '2026-08-04' },
+        { id: 5, name: 'Freelance Project', amount: 3500000, type: 'income', category: 'Gaji', date: '2026-08-05' }
+      ];
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  });
+
+  // Sync to LocalStorage on changes
+  useEffect(() => {
+    localStorage.setItem('financely_savings', JSON.stringify(savingsGoal));
+  }, [savingsGoal]);
+
+  useEffect(() => {
+    localStorage.setItem('financely_transactions', JSON.stringify(transactions));
+  }, [transactions]);
 
   // 4. Form inputs state (Custom Selects)
   const [form, setForm] = useState({
